@@ -1,0 +1,471 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: Final Fantasy XVI UI Binary
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: UI
+// File Mask: *.uib
+//  ID Bytes: 0x55 0x49 0x42
+//   History: 
+//------------------------------------------------
+
+const uint64 Sky_400<hidden=true> = 0xF8BD38;
+const uint64 Sky_500<hidden=true> = 0xE9A50E;
+const uint64 Sky_700<hidden=true> = 0xC78402;
+const uint64 Sky_800<hidden=true> = 0x855907;
+const uint64 Sky_900<hidden=true> = 0x6E4A0C;
+
+const uint64 Teal_400<hidden=true> = 0xA6B814;
+const uint64 Teal_500<hidden=true> = 0x88940D;
+const uint64 Teal_700<hidden=true> = 0x6E760F;
+const uint64 Teal_800<hidden=true> = 0x595E11;
+const uint64 Teal_900<hidden=true> = 0x4A4E13;
+
+const uint64 Green_400<hidden=true> = 0x5EC522;
+const uint64 Green_500<hidden=true> = 0x5EC522;
+const uint64 Green_700<hidden=true> = 0x518D2D;
+const uint64 Green_800<hidden=true> = 0x346516;
+const uint64 Green_900<hidden=true> = 0x42652C;
+
+const uint64 Amber_400<hidden=true> = 0x24BFFB;
+const uint64 Amber_500<hidden=true> = 0x0B9EF5;
+const uint64 Amber_600<hidden=true> = 0x0677D9;
+const uint64 Amber_700<hidden=true> = 0x0953B4;
+const uint64 Amber_800<hidden=true> = 0x0E4092;
+const uint64 Amber_900<hidden=true> = 0x0F3578;
+
+const uint64 Red_400<hidden=true> = 0x7171F8;
+const uint64 Red_500<hidden=true> = 0x4444EF;
+const uint64 Red_600<hidden=true> = 0x2626DC;
+const uint64 Red_700<hidden=true> = 0x1C1CB9;
+const uint64 Red_800<hidden=true> = 0x1B1B99;
+const uint64 Red_900<hidden=true> = 0x1D1D7F;
+
+struct MemberList;
+struct BezierNode;
+
+typedef struct(uint numBytes){
+    ubyte bytes[numBytes];
+} Padding<hidden=true, bgcolor=cBlack>;
+
+typedef struct TColor{
+    ubyte r;
+    ubyte g;
+    ubyte b;
+    ubyte a;
+    
+    local uint full_color<format=hex> = r;
+    full_color = full_color << 8;
+    full_color |= g;
+    full_color = full_color << 8;
+    full_color |= b;
+    full_color = full_color << 8;
+    full_color |= a;
+} Color<bgcolor=(this.full_color >> 8)>;
+
+enum BlendMode{
+    kNormal,
+    kDarken,
+    kMultiply,
+    kColorBurn,
+    kLinearBurn,
+    kLighten,
+    kScreen,
+    kColorDodge,
+    kLinearDodge,
+    kOverlay,
+    kSoftLight,
+    kHardLight,
+    kVividLight,
+    kLinearLight,
+    kHdrBlend,
+    kHdrLowBlend,
+    kHdrHighBlend,
+};
+
+enum LayerEffect{
+    kColorFilter,
+    kChromaticAberration,
+    kBlur,
+    kDropShadow,
+    kGlow,
+    kRadialBlur,
+    kBackgroundBlur,
+    kAlphaMask,
+    kImageMask,
+    kAntiAliasing,
+};
+
+typedef struct TMemberStruct_0{
+    int value_0;
+    int value_1;
+    int value_2;
+    int value_3<bgcolor=cLtRed>;
+    int value_4;
+    int value_5;
+    int value_6;
+    int value_7<bgcolor=cDkRed>;
+    
+    FSeek(startof(value_0) + value_7);
+    
+    struct 
+    {
+        int id_maybe;
+        switch(id_maybe)
+        {
+            case 0x13A3: { 
+                int stuff[20]<bgcolor=cGray>;
+                int offset;
+                int count;
+                
+                FSeek(startof(id_maybe) + offset);
+                BezierNode nodes[count];
+                break;
+            }
+            default: {
+                
+                break;
+            }
+        }
+    } member_data<bgcolor=cDkGreen>;
+    
+    
+    FSeek(startof(value_7) + 4);
+} MemberStruct_0<bgcolor=cRed, name = Str("%Xh", this.value_2)>;
+
+typedef struct TMemberStruct_1(uint count){
+    int offsets[count]<bgcolor=Teal_400>;
+    
+    local int i <hidden=true>;
+    for( i = 0 ; i < count ; i++ )
+    {
+        FSeek( startof(offsets) + offsets[i] );
+        struct{
+            int value_0;
+            int values[10]<bgcolor=cGray>;
+        } test;
+    }
+} MemberStruct_1<bgcolor=cPurple>;
+
+typedef struct TTimelineMember{
+    uint name_offset;
+    FSeek(startof(name_offset) + name_offset);
+    
+    string name<bgcolor=Sky_500>;
+    
+    FSeek(startof(name_offset) + 4);
+    
+    uint flags<format=hex>;
+    
+    struct{
+        int type_maybe;
+        int offset_0;
+        int count_0;
+        
+        int offset_1;
+        int count_1;
+        
+        int offset_2;
+        int count_2;
+        
+        FSeek(startof(type_maybe) + offset_0);
+        
+        MemberStruct_0 member_struct_0[count_0]<optimize=false>;
+        
+        FSeek(startof(type_maybe) + offset_1);
+        
+        struct{
+            int unknown_0;
+            int unknown_1;
+            int unknown_2;
+        } sanity_1[count_1]<bgcolor=cGreen>;
+        
+        FSeek(startof(type_maybe) + offset_2);
+        
+        MemberStruct_1 member_struct_1(count_2);
+        
+        FSeek(startof(type_maybe) + 28);
+    } unknown_0;
+    
+    byte data[60]<bgcolor=cGray>;
+} TimelineMember<name = this.name>;
+
+typedef struct TTimelineCollection(uint64 startPoint){
+    uint collection_offset;
+    uint member_count;
+    
+    FSeek(startPoint + collection_offset);
+    
+    TimelineMember members[member_count]<optimize=false>;
+    
+    FSeek(startof(member_count) + 4);
+} TimelineCollection;
+
+
+enum MemberType{
+    kGroup = 0x1,
+    kImage = 0x2,
+    kUnknown3 = 0x3,
+    kUnknown4 = 0x4,
+    kUnknown5 = 0x5,
+    kRectangle = 0x6,
+    kEllipse = 0x7,
+    kBezier = 0x8,
+    kGroupRef = 0xA,
+    kEffect = 0xB,
+};
+
+typedef struct TGroup(uint64 startPoint){
+    byte unknown[60]<bgcolor=cGray>;
+    //MemberList list(startPoint);
+} Group;
+
+typedef struct TImage{
+    int unknown_1;
+    int unknown_2;
+    Color color;
+} Image;
+
+typedef struct TRectangle{
+    int unknown_1;
+    int unknown_2;
+    Color color;
+} Rectangle;
+
+typedef struct TEllipse{
+    int unknown_1;
+    int unknown_2;
+    Color color;
+} Ellipse;
+
+typedef struct TBezierNode{
+    int x<bgcolor=cBlue>;
+    int y<bgcolor=cBlue>;
+    int handle_a_x;
+    int handle_a_y;
+    int handle_b_x;
+    int handle_b_y;
+    float unknown_floats[8];
+} BezierNode<bgcolor=cDkBlue, name = Str("Node(%d, %d) - A(%d, %d), B(%d, %d) ", this.x, this.y, this.handle_a_x, handle_a_y, handle_b_x, handle_b_y)>;
+
+typedef struct TBezier{
+    int unknown_1;
+    int unknown_2;
+    Color color;
+    byte unknown_data_1[120]<bgcolor=cGray>;
+    
+    int point_count;
+    BezierNode nodes[point_count];
+} Bezier;
+
+typedef struct TGroupRef{
+    int unknown_1;
+    int unknown_2;
+    Color color;
+} GroupRef;
+
+typedef struct TMember(uint64 startPoint){
+    uint offset<bgcolor=cRed>;
+    
+    FSeek(startPoint + offset);
+    
+    MemberType type;
+    uint nameOffset<bgcolor=cWhite>;
+    
+    FSeek(startof(type) + nameOffset);
+    string name<bgcolor=cWhite>;
+    
+    FSeek(startof(nameOffset) + 4);
+    
+    int x;
+    int y;
+    float rotation;
+    float scale_x, scale_x;
+    int anchor_x, anchor_y;
+    Padding unknown_data(32);
+    int width, height;
+    int offset_to_data;
+    int unknown_0;
+    Padding maybe_reserved(60);
+    MemberList children(startof(type));
+    
+    switch(type)
+    {
+        case kGroup:
+        {
+            Group group_data(startof(type));
+            break;
+        }
+        case kImage:
+        {
+            FSeek(startof(type) + offset_to_data);
+            Image image_data;
+            break;
+        }
+        case kEllipse:
+        {
+            FSeek(startof(type) + offset_to_data);
+            Ellipse ellipse_data;
+            break;
+        }
+        case kBezier:
+        {
+            FSeek(startof(type) + offset_to_data);
+            Bezier bezier_data;
+            break;
+        }
+        case kRectangle:
+        {
+            FSeek(startof(type) + offset_to_data);
+            Rectangle rectangle_data;
+            break;
+        }
+        case kGroupRef:
+        {
+            FSeek(startof(type) + offset_to_data);
+            GroupRef group_ref_data;
+            break;
+        }
+        default:
+            break;
+    }
+    
+    FSeek(startof(offset) + 4);
+} Member<name = Str("(%s) %s ", EnumToString(this.type), this.name), bgcolor=cDkRed>;
+
+typedef struct TMemberList(uint64 startPoint){
+    uint offset;
+    uint count;
+    
+    FSeek(startPoint + offset);
+    
+    local uint64 start = FTell();
+    Member members(start)[count]<optimize=false>;
+    
+    FSeek(startof(count) + 4);
+} MemberList<bgcolor=cRed>;
+
+typedef struct TLayerProperties{
+    int maybe_type;
+    int name_offset_offset;
+    int name_count;
+    int unknown_0;
+    BlendMode blend_mode<bgcolor=cRed>;
+    int maybe_flags;
+    int unknowns_0[4];
+    Padding maybe_reserved(28);
+    
+    FSeek(startof(maybe_type) + name_offset_offset);
+    int str_offset[name_count];
+    struct{
+        byte data[148];
+    } unknown_structs<bgcolor=cDkYellow>;
+    
+    FSeek(startof(str_offset) + str_offset[0]);
+    string str;
+    
+} LayerProperties<bgcolor=cYellow>;
+
+typedef struct TGroupEntry{
+    uint name_offset<bgcolor=cLtPurple>;
+    uint width<bgcolor=cBlue>;
+    uint height<bgcolor=cBlue>;
+    uint members_offset;
+    MemberList member_list(startof(name_offset));
+    TimelineCollection timeline_collection(startof(name_offset))<bgcolor=Sky_400>;
+    Padding reserved_maybe(32);
+    
+    FSeek(startof(name_offset) + members_offset);
+    
+    LayerProperties layer_properties;
+    
+    FSeek(startof(name_offset) + name_offset);
+    
+    string name<bgcolor=cPurple>;
+    
+    FSeek(startof(name_offset) + 64);
+} GroupEntry<name = Str("%s (w%d, h%d) ", this.name, this.width, this.height)>;
+
+typedef struct TAssetEntry{
+    enum {
+        kInvalid,
+        kTexture,
+        kUi,
+        kVfx,
+    } type_maybe<bgcolor=Red_400>;
+    
+    int texture_path_offset<bgcolor=Teal_400>;
+    int name_info_offset<bgcolor=Teal_400>;
+    
+    FSeek(startof(type_maybe) + name_info_offset);
+    int unknown;
+    int part_path_offset<bgcolor=Teal_400>;
+    
+    //FSeek(startof(type_maybe) + texture_path_offset);
+   // string uri<bgcolor=Amber_700>;
+    
+    //FSeek(startof(unknown) + part_path_offset);
+   // string path<bgcolor=Amber_400>;
+} AssetEntry;
+
+typedef struct TAssetCollection{
+    int list_offset<bgcolor=Teal_400>;
+    int list_count<bgcolor=Green_400>;
+    
+    int list_offset_1<bgcolor=Teal_400>;
+    int list_count_1<bgcolor=Green_400>;
+    
+    int list_offset_2<bgcolor=Teal_400>;
+    int list_count_2<bgcolor=Green_400>;
+    
+    FSeek(startof(list_offset) + list_offset);
+    int offsets[list_count]<bgcolor=Teal_400>;
+    
+    FSeek(startof(list_offset) + list_offset_1);
+    int offsets_1[list_count_1]<bgcolor=Teal_400>;
+    
+    FSeek(startof(list_offset) + list_offset_2);
+    int offsets_2[list_count_2]<bgcolor=Teal_400>;
+    
+    local int i<hidden=true>;
+    for( i = 0 ; i < list_count ; i++ )
+    {
+        FSeek(startof(offsets) + offsets[i]);
+        AssetEntry texture_entry;
+    }
+    
+    for( i = 0 ; i < list_count_1 ; i++ )
+    {
+        FSeek(startof(offsets_1) + offsets_1[i]);
+        AssetEntry ui_entry;
+    }
+    
+    for( i = 0 ; i < list_count_2 ; i++ )
+    {
+        FSeek(startof(offsets_2) + offsets_2[i]);
+        AssetEntry vfx_entry;
+    }
+} AssetCollection;
+
+typedef struct THeader{
+    char magic[4]<bgcolor=cYellow>;
+    int version_maybe<bgcolor=cBlue>;
+    byte reserved[16]<bgcolor=cNone>;
+    byte data[20];
+} Header<bgcolor=cGray>;
+
+Header header;
+struct{
+    int array_list_offset<bgcolor=Teal_400>;
+    int group_list_offset<bgcolor=Teal_400>;
+    int group_count<bgcolor=Green_400>;
+} unknown_0;
+
+FSeek(startof(unknown_0) + unknown_0.array_list_offset);
+
+AssetCollection assets;
+
+FSeek(startof(unknown_0) + unknown_0.group_list_offset);
+GroupEntry layers[unknown_0.group_count]<optimize=false>;
