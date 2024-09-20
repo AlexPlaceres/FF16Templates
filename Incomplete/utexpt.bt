@@ -1,0 +1,37 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: Final Fantasy XVI UI Texture Parts
+//   Authors: #1 .vfxb hater
+//   Version: 
+//   Purpose: 
+//  Category: Textures
+// File Mask: *.utexpt
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct TPart{
+    int name_offset<bgcolor=cGreen>;
+    int u_0;
+    int v_0;
+    int u_1;
+    int v_1;
+    
+    FSeek(startof(name_offset) + name_offset);
+    
+    string name<bgcolor=cGreen>;
+    
+    FSeek(startof(name_offset) + 0x14);
+} Part<
+    name = Str("%s: (u0_%d, v0_%d) (u1_%d, v1_%d) ", 
+    this.name, this.u_0, this.v_0, this.u_1, this.v_1)>;
+
+int file_path_address<bgcolor=cYellow>;
+int parts_offset<bgcolor=cDkGreen>;
+int parts_count<bgcolor=cDkGreen>;
+
+Part parts[parts_count]<optimize=false>;
+
+FSeek(file_path_address);
+string file_path<bgcolor=cYellow>;
