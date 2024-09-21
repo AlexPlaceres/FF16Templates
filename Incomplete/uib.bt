@@ -2,7 +2,7 @@
 //--- 010 Editor v15.0 Binary Template
 //
 //      File: Final Fantasy XVI UI Binary
-//   Authors: 
+//   Authors: Uhhhh, Nenkai
 //   Version: 
 //   Purpose: 
 //  Category: UI
@@ -48,7 +48,7 @@ struct BezierNode;
 
 typedef struct(uint numBytes){
     ubyte bytes[numBytes];
-} Padding<hidden=true, bgcolor=cBlack>;
+} Padding;
 
 typedef struct TColor{
     ubyte r;
@@ -56,14 +56,14 @@ typedef struct TColor{
     ubyte b;
     ubyte a;
     
-    local uint full_color<format=hex> = r;
-    full_color = full_color << 8;
-    full_color |= g;
+    local uint full_color<format=hex> = a;
     full_color = full_color << 8;
     full_color |= b;
     full_color = full_color << 8;
-    full_color |= a;
-} Color<bgcolor=(this.full_color >> 8)>;
+    full_color |= g;
+    full_color = full_color << 8;
+    full_color |= r;
+} Color<bgcolor=(this.full_color & 0xFFFFFF)>;
 
 enum BlendMode{
     kNormal,
@@ -102,19 +102,24 @@ typedef struct TMemberStruct_0{
     int value_0;
     int value_1;
     int value_2;
-    int value_3<bgcolor=cLtRed>;
-    int value_4;
-    int value_5;
-    int value_6;
-    int value_7<bgcolor=cDkRed>;
+    int starting_frame<bgcolor=cLtRed>;
+    int duration;
+    int item_index<fgcolor=cGreen>;
+    ubyte bool_0;
+    ubyte bool_1;
+    short padding<bgcolor=cNone>;
+    int data_offset<bgcolor=cDkRed>;
     
-    FSeek(startof(value_0) + value_7);
+    FSeek(startof(value_0) + data_offset);
     
     struct 
     {
         int id_maybe;
         switch(id_maybe)
         {
+            // 0x1391: Likely for textures
+            // 0x13A3: For beziers
+
             case 0x13A3: { 
                 int stuff[20]<bgcolor=cGray>;
                 int offset;
@@ -132,8 +137,8 @@ typedef struct TMemberStruct_0{
     } member_data<bgcolor=cDkGreen>;
     
     
-    FSeek(startof(value_7) + 4);
-} MemberStruct_0<bgcolor=cRed, name = Str("%Xh", this.value_2)>;
+    FSeek(startof(data_offset) + 4);
+} MemberStruct_0<bgcolor=cRed, name = Str("%Xh: Item %d ", this.value_2, this.item_index)>;
 
 typedef struct TMemberStruct_1(uint count){
     int offsets[count]<bgcolor=Teal_400>;
@@ -144,8 +149,19 @@ typedef struct TMemberStruct_1(uint count){
         FSeek( startof(offsets) + offsets[i] );
         struct{
             int value_0;
-            int values[10]<bgcolor=cGray>;
-        } test;
+            if(value_0 == 0xFA2)
+            {
+                int values[9]<bgcolor=cGray>;
+            }
+            else
+            {
+                int values[10]<bgcolor=cGray>;
+                FSeek(startof(value_0) + values[9]);
+                string name<bgcolor=cNone>;
+                FSeek(startof(values[9]) + 4);
+            }
+            
+        } test<name = (exists(this.name) ? this.name : "")>;
     }
 } MemberStruct_1<bgcolor=cPurple>;
 
@@ -170,9 +186,11 @@ typedef struct TTimelineMember{
         int offset_2;
         int count_2;
         
-        FSeek(startof(type_maybe) + offset_0);
-        
-        MemberStruct_0 member_struct_0[count_0]<optimize=false>;
+        if (count_0)
+        {
+            FSeek(startof(type_maybe) + offset_0);
+            MemberStruct_0 timeline_elements[count_0]<optimize=false>;
+        }
         
         FSeek(startof(type_maybe) + offset_1);
         
@@ -184,21 +202,40 @@ typedef struct TTimelineMember{
         
         FSeek(startof(type_maybe) + offset_2);
         
-        MemberStruct_1 member_struct_1(count_2);
+        MemberStruct_1 items(count_2);
+        struct{
+          int unk_0;
+          int offset_0;
+          int offset_1; 
+          
+          FSeek(startof(unk_0) + offset_1);
+          int unk_1;
+          int offset_2;
+          
+          FSeek(startof(unk_0) + offset_0);
+          string str_0;
+          
+          FSeek(startof(unk_1) + offset_2);
+          string str_1;
+          
+        } member_struct_2<bgcolor=Amber_800>;
         
         FSeek(startof(type_maybe) + 28);
     } unknown_0;
     
-    byte data[60]<bgcolor=cGray>;
+    int duration;
+    byte data[56]<bgcolor=cGray>;
 } TimelineMember<name = this.name>;
 
 typedef struct TTimelineCollection(uint64 startPoint){
-    uint collection_offset;
-    uint member_count;
+    uint collection_offset <format=hex, fgcolor=cRed>;
+    uint member_count <fgcolor=cGreen>;
     
-    FSeek(startPoint + collection_offset);
-    
-    TimelineMember members[member_count]<optimize=false>;
+    if (member_count)
+    {
+        FSeek(startPoint + collection_offset);
+        TimelineMember members[member_count]<optimize=false>;
+    }
     
     FSeek(startof(member_count) + 4);
 } TimelineCollection;
@@ -289,7 +326,8 @@ typedef struct TMember(uint64 startPoint){
     int offset_to_data;
     int unknown_0;
     Padding maybe_reserved(60);
-    MemberList children(startof(type));
+    if(type == kGroup)
+        MemberList children(startof(type));
     
     switch(type)
     {
@@ -336,8 +374,8 @@ typedef struct TMember(uint64 startPoint){
 } Member<name = Str("(%s) %s ", EnumToString(this.type), this.name), bgcolor=cDkRed>;
 
 typedef struct TMemberList(uint64 startPoint){
-    uint offset;
-    uint count;
+    uint offset <fgcolor=cRed, format=hex>;
+    uint count <fgcolor=cGreen>;
     
     FSeek(startPoint + offset);
     
@@ -345,48 +383,138 @@ typedef struct TMemberList(uint64 startPoint){
     Member members(start)[count]<optimize=false>;
     
     FSeek(startof(count) + 4);
-} MemberList<bgcolor=cRed>;
+} MemberList;
 
 typedef struct TLayerProperties{
-    int maybe_type;
-    int name_offset_offset;
-    int name_count;
-    int unknown_0;
-    BlendMode blend_mode<bgcolor=cRed>;
+    int type;
+    int name_offset_offset<format=hex, fgcolor=cRed>;
+    int name_count<fgcolor=cGreen>;
+    int unk_subtype;
+    BlendMode blend_mode;
     int maybe_flags;
     int unknowns_0[4];
-    Padding maybe_reserved(28);
+    int field_0x28;
+    float field_0x2C;
+    float field_0x30;
+    float field_0x34;
+    float field_0x38;
+    float field_0x3C;
+    float field_0x40;
+    float field_0x44;
+    float field_0x48;
+    int field_0x4C;
+    float field_0x50;
+    float field_0x54;
+    float field_0x58;
+    float field_0x5C;
+    short field_0x60;
+    byte field_0x62;
+    byte field_0x63;
+    float field_0x64;
+    int field_0x68;
+    float field_0x6C;
+    float field_0x70;
+    float field_0x74;
+    float field_0x78;
+    float field_0x7C;
+    float field_0x80;
+    float field_0x84;
+    float field_0x88;
+    float field_0x8C;
+    float field_0x90;
+    float field_0x94;
+    int offset_0x98 <format=hex, fgcolor=cRed>;
+    float field_0x9C;
+    float field_0xA0;
+    float field_0xA4;
+    int name_offset <format=hex, fgcolor=cRed>;
+    int name_count <fgcolor=cGreen>;
+    int field_0xB0;
+    int field_0xB4;
+    int field_0xB8;
+    float field_0xBC;
+    float field_0xC0;
+    float field_0xC4;
+    float field_0xC8;
+    float field_0xCC;
+    float field_0xD0;
+    float field_0xD4;
+    float field_0xD8;
+    float field_0xDC;
+    float field_0xF0;
+    float field_0xF4;
+    float field_0xF8;
+    float field_0xFC;
+    int field_0x100;
+    int field_0x104;
+    int sub_type_0x108; // Used if type == 1?
+    int field_0x10C; // Used if type == 1?
+    if (type == 15)
+    {
+        int field_0x10C;
+        int field_0x110;
+        float field_0x114;
+        float field_0x118;
+        float field_0x11C;
+        float field_0x120;
+        float field_0x124;
+        float field_0x128;
+        int field_0x12C;
+        int field_0x130;
+        int field_0x134;
+        float field_0x138;
+        float field_0x13C;
+        float field_0x140;
+        float field_0x144;
+        float field_0x148;
+        float field_0x14C;
+        float field_0x150;
+        float field_0x154;
+        float field_0x158;
+        float field_0x15C;
+    }
+    byte pad[0x28];
+    local int endPos = FTell();
+        
+    struct
+    {
+        FSeek(startof(type) + name_offset_offset);
+        int str_offset[name_count];
     
-    FSeek(startof(maybe_type) + name_offset_offset);
-    int str_offset[name_count];
-    struct{
-        byte data[148];
-    } unknown_structs<bgcolor=cDkYellow>;
+        FSeek(startof(str_offset) + str_offset[0]);
+        string str;
+        
+        FSeek(startof(str_offset) + (name_count * 4));
+    } names <bgcolor=cGray>;
     
-    FSeek(startof(str_offset) + str_offset[0]);
-    string str;
+    FSeek(startof(type) + offset_0x98);
+    struct
+    {
+        byte unkdata[0x34];
+        
+        FSeek(startof(unkdata) + 0x34);
+    } struct_0x98 <bgcolor=cLtRed>;
     
-} LayerProperties<bgcolor=cYellow>;
+    FSeek(endPos);
+} LayerProperties <bgcolor=cRed>;
 
 typedef struct TGroupEntry{
-    uint name_offset<bgcolor=cLtPurple>;
-    uint width<bgcolor=cBlue>;
-    uint height<bgcolor=cBlue>;
-    uint members_offset;
+    uint name_offset <format=hex, fgcolor=cRed>;
+    uint width;
+    uint height;
+    uint layer_properties_offset <format=hex, fgcolor=cRed>;
     MemberList member_list(startof(name_offset));
-    TimelineCollection timeline_collection(startof(name_offset))<bgcolor=Sky_400>;
-    Padding reserved_maybe(32);
+    TimelineCollection timeline_collection(startof(name_offset));
+    Padding padding(0x20);
     
-    FSeek(startof(name_offset) + members_offset);
-    
+    FSeek(startof(name_offset) + layer_properties_offset);
     LayerProperties layer_properties;
     
     FSeek(startof(name_offset) + name_offset);
-    
     string name<bgcolor=cPurple>;
     
-    FSeek(startof(name_offset) + 64);
-} GroupEntry<name = Str("%s (w%d, h%d) ", this.name, this.width, this.height)>;
+    FSeek(startof(name_offset) + 0x40);
+} GroupEntry<name = Str("%s (%dx%d) ", this.name, this.width, this.height)>;
 
 typedef struct TAssetEntry{
     enum {
@@ -394,78 +522,118 @@ typedef struct TAssetEntry{
         kTexture,
         kUi,
         kVfx,
-    } type_maybe<bgcolor=Red_400>;
+    } type_maybe;
     
-    int texture_path_offset<bgcolor=Teal_400>;
-    int name_info_offset<bgcolor=Teal_400>;
+    int texture_path_offset<format=hex, fgcolor=cRed>;
+    int name_info_offset<format=hex, fgcolor=cRed>;
+    int pad[8] <hidden=true>;
+    
+    FSeek(startof(type_maybe) + texture_path_offset);
+    string uri<bgcolor=Amber_700>;
     
     FSeek(startof(type_maybe) + name_info_offset);
-    int unknown;
-    int part_path_offset<bgcolor=Teal_400>;
-    
-    //FSeek(startof(type_maybe) + texture_path_offset);
-   // string uri<bgcolor=Amber_700>;
-    
-    //FSeek(startof(unknown) + part_path_offset);
-   // string path<bgcolor=Amber_400>;
+    struct
+    {
+        int unknown <format=hex>;
+        int part_path_offset <format=hex, fgcolor=cRed>;
+        
+        FSeek(startof(unknown) + part_path_offset);
+        string path<bgcolor=Amber_400>;
+        
+        FSeek(startof(unknown) + 0x08);
+    } name_info <comment=path, bgcolor=cBlue>;
+
+    FSeek(startof(type_maybe) + 0x2C);
 } AssetEntry;
 
 typedef struct TAssetCollection{
-    int list_offset<bgcolor=Teal_400>;
-    int list_count<bgcolor=Green_400>;
+    int texture_list_offset<format=hex, fgcolor=cRed>;
+    int texture_count<fgcolor=cGreen>;
     
-    int list_offset_1<bgcolor=Teal_400>;
-    int list_count_1<bgcolor=Green_400>;
+    int ui_entries_list_offset<format=hex, fgcolor=cRed>;
+    int ui_entry_count<fgcolor=cGreen>;
     
-    int list_offset_2<bgcolor=Teal_400>;
-    int list_count_2<bgcolor=Green_400>;
+    int vfx_list_offset<format=hex, fgcolor=cRed>;
+    int vfx_entry_count<fgcolor=cGreen>;
+    int pad[7];
     
-    FSeek(startof(list_offset) + list_offset);
-    int offsets[list_count]<bgcolor=Teal_400>;
-    
-    FSeek(startof(list_offset) + list_offset_1);
-    int offsets_1[list_count_1]<bgcolor=Teal_400>;
-    
-    FSeek(startof(list_offset) + list_offset_2);
-    int offsets_2[list_count_2]<bgcolor=Teal_400>;
-    
-    local int i<hidden=true>;
-    for( i = 0 ; i < list_count ; i++ )
+    if (texture_count)
     {
-        FSeek(startof(offsets) + offsets[i]);
-        AssetEntry texture_entry;
+        FSeek(startof(texture_list_offset) + texture_list_offset);
+        struct
+        {
+            int offsets[texture_count] <format=hex, fgcolor=cRed, bgcolor=cGray>;
+            local int i<hidden=true>;
+            for( i = 0 ; i < texture_count ; i++ )
+            {
+                FSeek(startof(offsets) + offsets[i]);
+                AssetEntry texture_entry;
+            }
+        } textures;
     }
     
-    for( i = 0 ; i < list_count_1 ; i++ )
+    if (ui_entry_count)
     {
-        FSeek(startof(offsets_1) + offsets_1[i]);
-        AssetEntry ui_entry;
+        FSeek(startof(texture_list_offset) + ui_entries_list_offset);
+        struct
+        {
+            int offsets[ui_entry_count]<format=hex, fgcolor=cRed>;
+            local int i<hidden=true>;
+            for( i = 0 ; i < ui_entry_count ; i++ )
+            {
+                FSeek(startof(offsets) + offsets[i]);
+                AssetEntry ui_entry;
+            }
+        } ui_entries;
     }
     
-    for( i = 0 ; i < list_count_2 ; i++ )
+    if (vfx_entry_count)
     {
-        FSeek(startof(offsets_2) + offsets_2[i]);
-        AssetEntry vfx_entry;
+        FSeek(startof(texture_list_offset) + vfx_list_offset);
+        struct
+        {
+            int offsets[vfx_entry_count]<format=hex, fgcolor=cRed>;
+            local int i<hidden=true>;
+            for( i = 0 ; i < vfx_entry_count ; i++ )
+            {
+                FSeek(startof(offsets) + offsets[i]);
+                AssetEntry vfx_entry;
+            }
+        } ui_entries;
     }
+    
+    FSeek(startof(texture_list_offset) + 0x34);
 } AssetCollection;
 
-typedef struct THeader{
-    char magic[4]<bgcolor=cYellow>;
-    int version_maybe<bgcolor=cBlue>;
-    byte reserved[16]<bgcolor=cNone>;
-    byte data[20];
-} Header<bgcolor=cGray>;
+typedef struct TUIBHeader{
+    uint magic<format=hex, comment="'UIB\\0', checked">;
+    uint version<comment="FF16: Version 10 expected">;
+    byte reserved[16];
+    uint headerSize <format=hex>;
+    byte _empty_[16];
+} UIBHeader<bgcolor=cPurple>;
 
-Header header;
+UIBHeader header;
+FSeek(startof(header) + header.headerSize);
+
 struct{
-    int array_list_offset<bgcolor=Teal_400>;
-    int group_list_offset<bgcolor=Teal_400>;
-    int group_count<bgcolor=Green_400>;
-} unknown_0;
+    int array_list_offset<format=hex, fgcolor=cRed>;
+    int group_list_offset<format=hex, fgcolor=cRed>;
+    int group_count<fgcolor=cGreen>;
+} toc <bgcolor=cRed, size=0x2C>;
 
-FSeek(startof(unknown_0) + unknown_0.array_list_offset);
+FSeek(startof(toc) + toc.array_list_offset);
 
-AssetCollection assets;
+AssetCollection assets <bgcolor=cYellow>;
 
-FSeek(startof(unknown_0) + unknown_0.group_list_offset);
-GroupEntry layers[unknown_0.group_count]<optimize=false>;
+FSeek(startof(toc) + toc.group_list_offset);
+local int i = 0;
+
+struct
+{
+    for (i = 0; i < toc.group_count; i++)
+    {
+        FSeek(startof(toc) + toc.group_list_offset + (i * 0x40));
+        GroupEntry layer <bgcolor=cBlue>;
+    }
+} layers;
