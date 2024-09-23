@@ -125,6 +125,8 @@ enum MemberType{
     kBezier = 0x8,
     kGroupRef = 0xA,
     kEffect = 0xB,
+    kUnknown12 = 0xC,
+    kMask = 0xD
 };
 
 typedef struct TMemberStruct_0{
@@ -302,7 +304,9 @@ typedef struct TBezierNode{
     Point origin;
     Point handle_a;
     Point handle_b;
-    float unknown_floats[8];
+    float field_0x3;
+    Padding padding(0x1C);
+    //float unknown_floats[8];
 } BezierNode<bgcolor=cDkBlue, read=BezierNodeRead>;
 
 string BezierNodeRead(BezierNode& input)
@@ -322,6 +326,22 @@ typedef struct TBezier{
 typedef struct TGroupRef{
     MemberData base;
 } GroupRef;
+
+typedef struct TMask{
+    MemberData base;
+    DataPointer field_0x1;
+    
+    FSeek(startof(this) + field_0x1.offset);
+    struct(DataPointer& ptr){
+        OffsetT offsets[ptr.count];
+        local int i <hidden=true>;
+        for(i = 0; i < ptr.count; i++)
+        {
+            FSeek(startof(this) + offsets[i]);
+            AssetEntry entry;
+        }
+    } struct_0x2(field_0x1);
+} Mask;
 
 typedef struct TMember{
     MemberType type;
@@ -390,6 +410,11 @@ typedef struct TMember{
         case kGroupRef:
         {
             GroupRef group_ref_data<bgcolor=cPurple>;
+            break;
+        }
+        case kMask:
+        {
+            Mask mask_data<bgcolor=cPurple>;
             break;
         }
         default:
