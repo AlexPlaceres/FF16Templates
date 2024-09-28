@@ -11,1048 +11,576 @@
 //   History: 
 //------------------------------------------------
 
-const uint64 Sky_400<hidden=true> = 0xF8BD38;
-const uint64 Sky_500<hidden=true> = 0xE9A50E;
-const uint64 Sky_700<hidden=true> = 0xC78402;
-const uint64 Sky_800<hidden=true> = 0x855907;
-const uint64 Sky_900<hidden=true> = 0x6E4A0C;
+typedef int OffsetT<fgcolor=cRed, format=hex>;
+typedef int AddressT<fgcolor=cPurple, format=hex>;
 
-const uint64 Teal_400<hidden=true> = 0xA6B814;
-const uint64 Teal_500<hidden=true> = 0x88940D;
-const uint64 Teal_700<hidden=true> = 0x6E760F;
-const uint64 Teal_800<hidden=true> = 0x595E11;
-const uint64 Teal_900<hidden=true> = 0x4A4E13;
+typedef struct TPadding(uint64 count){
+    local uint64 padding_count<hidden=true> = count;
+    byte data[padding_count];
+} Padding<bgcolor=cNone, read=Str("%u bytes", this.padding_count)>;
 
-const uint64 Green_400<hidden=true> = 0x5EC522;
-const uint64 Green_500<hidden=true> = 0x5EC522;
-const uint64 Green_700<hidden=true> = 0x518D2D;
-const uint64 Green_800<hidden=true> = 0x346516;
-const uint64 Green_900<hidden=true> = 0x42652C;
+typedef struct TOffset24{
+    int offset : 24;
+    int flags : 8;
+} Offset24<fgcolor=0x008CFF, read=Str("%Xh, %s", this.offset, IntToBinaryStr(this.flags))>;
 
-const uint64 Amber_400<hidden=true> = 0x24BFFB;
-const uint64 Amber_500<hidden=true> = 0x0B9EF5;
-const uint64 Amber_600<hidden=true> = 0x0677D9;
-const uint64 Amber_700<hidden=true> = 0x0953B4;
-const uint64 Amber_800<hidden=true> = 0x0E4092;
-const uint64 Amber_900<hidden=true> = 0x0F3578;
-
-const uint64 Red_400<hidden=true> = 0x7171F8;
-const uint64 Red_500<hidden=true> = 0x4444EF;
-const uint64 Red_600<hidden=true> = 0x2626DC;
-const uint64 Red_700<hidden=true> = 0x1C1CB9;
-const uint64 Red_800<hidden=true> = 0x1B1B99;
-const uint64 Red_900<hidden=true> = 0x1D1D7F;
-
-// Just for easy access to these values when set 
-// because fuck passing them through everything
-local int64 G_ITEM_DESC_ADDRESS = -1;
-local int64 G_ITEM_DATA_ADDRESS = -1;
-local int ITEM_COUNT = 0;
-
-typedef struct TOffsetWithFlags{
-    int offset : 30;
-    int flag_0 : 2;
-    //int flag_1 : 1;
-} OffsetWithFlags <bgcolor=Red_600, name = Str("Offset: 0x%X (%d)", this.offset, this.flag_0)>;
-
-// Nowhere near sure about any of these but they haven't let me down
-enum<short> ObjectType{
-    kUnknown_00_ = 0x00,
-    kUnknown_01_ = 0x01,
-    kUnknown_02_ = 0x02,
-    kUnknown_03_ = 0x03,
-    kUnknown_04_ = 0x04,
-    kUnknown_05_ = 0x05,
-    kUnknown_06_ = 0x06,
-    kUnknown_07_ = 0x07,
-    kUnknown_08_ = 0x08,
-    kUnknown_09_ = 0x09,
-    kUnknown_0A_ = 0x0A,
-    kUnknown_0B_ = 0x0B,
-    kUnknown_0C_ = 0x0C,
-    kUnknown_0D_ = 0x0D,
-    kUnknown_0E_ = 0x0E,
-    kUnknown_0F_ = 0x0F,
-    kUnknown_10_ = 0x10,
-    kUnknown_11_ = 0x11,
-    kUnknown_12_ = 0x12,
-    kUnknown_13_ = 0x13,
-    kUnknown_14_ = 0x14,
-    kUnknown_15_ = 0x15,
-    kUnknown_16_ = 0x16,
-    kUnknown_17_ = 0x17,
-    kUnknown_18_ = 0x18,
-    kUnknown_19_ = 0x19,
-    kUnknown_1A_ = 0x1A,
-    kUnknown_1B_ = 0x1B,
-    kUnknown_1C_ = 0x1C,
-    kUnknown_1D_ = 0x1D,
-    kUnknown_1E_ = 0x1E,
-    kUnknown_1F_ = 0x1F,
-    kUnknown_20_ = 0x20,
-    kUnknown_21_ = 0x21,
-    kUnknown_22_ = 0x22,
-    kUnknown_23_ = 0x23,
-    kUnknown_24_ = 0x24,
-    kUnknown_25_ = 0x25,
-    kUnknown_26_ = 0x26,
-    kUnknown_27_ = 0x27,
-    kUnknown_28_ = 0x28,
-    kUnknown_29_ = 0x29,
-    kUnknown_2A_ = 0x2A,
-    kChildItem_2B_ = 0x2B,
-    kUnknown_2C_ = 0x2C,
-    kUnknown_2D_ = 0x2D,
-    kUnknown_2E_ = 0x2E,
-    kUnknown_2F_ = 0x2F,
-    kUnknown_30_ = 0x30,
-    kUnknown_31_ = 0x31,
-    kUnknown_32_ = 0x32,
-    kUnknown_33_ = 0x33,
-    kUnknown_34_ = 0x34,
-    kUnknown_35_ = 0x35,
-    kUnknown_36_ = 0x36,
-    kUnknown_37_ = 0x37,
-    kUnknown_38_ = 0x38,
-    kUnknown_39_ = 0x39,
-    kUnknown_3A_ = 0x3A,
-    kUnknown_3B_ = 0x3B,
-    kUnknown_3C_ = 0x3C,
-    kUnknown_3D_ = 0x3D,
-    kUnknown_3E_ = 0x3E,
-    kUnknown_3F_ = 0x3F,
-    kUnknown_40_ = 0x40,
-    kUnknown_41_ = 0x41,
-    kUnknown_42_ = 0x42,
-    kUnknown_43_ = 0x43,
-    kUnknown_44_ = 0x44,
-    kUnknown_45_ = 0x45,
-    kUnknown_46_ = 0x46,
-    kUnknown_47_ = 0x47,
-    kUnknown_48_ = 0x48,
-    kUnknown_49_ = 0x49,
-    kUnknown_4A_ = 0x4A,
-    kUnknown_4B_ = 0x4B,
-    kUnknown_4C_ = 0x4C,
-    kUnknown_4D_ = 0x4D,
-    kUnknown_4E_ = 0x4E,
-    kUnknown_4F_ = 0x4F,
-    kUnknown_50_ = 0x50,
-    kUnknown_51_ = 0x51,
-    kUnknown_52_ = 0x52,
-    kUnknown_53_ = 0x53,
-    kUnknown_54_ = 0x54,
-    kUnknown_55_ = 0x55,
-    kUnknown_56_ = 0x56,
-    kUnknown_57_ = 0x57,
-    kUnknown_58_ = 0x58,
-    kUnknown_59_ = 0x59,
-    kUnknown_5A_ = 0x5A,
-    kUnknown_5B_ = 0x5B,
-    kUnknown_5C_ = 0x5C,
-    kUnknown_5D_ = 0x5D,
-    kUnknown_5E_ = 0x5E,
-    kUnknown_5F_ = 0x5F,
-    kUnknown_60_ = 0x60,
-    kUnknown_61_ = 0x61,
-    kUnknown_62_ = 0x62,
-    kUnknown_63_ = 0x63,
-    kUnknown_64_ = 0x64,
-    kUnknown_65_ = 0x65,
-    kUnknown_66_ = 0x66,
-    kUnknown_67_ = 0x67,
-    kUnknown_68_ = 0x68,
-    kUnknown_69_ = 0x69,
-    kUnknown_6A_ = 0x6A,
-    kUnknown_6B_ = 0x6B,
-    kUnknown_6C_ = 0x6C,
-    kUnknown_6D_ = 0x6D,
-    kUnknown_6E_ = 0x6E,
-    kUnknown_6F_ = 0x6F,
-    kUnknown_70_ = 0x70,
-    kUnknown_71_ = 0x71,
-    kUnknown_72_ = 0x72,
-    kUnknown_73_ = 0x73,
-    kUnknown_74_ = 0x74,
-    kUnknown_75_ = 0x75,
-    kUnknown_76_ = 0x76,
-    kUnknown_77_ = 0x77,
-    kUnknown_78_ = 0x78,
-    kUnknown_79_ = 0x79,
-    kUnknown_7A_ = 0x7A,
-    kUnknown_7B_ = 0x7B,
-    kUnknown_7C_ = 0x7C,
-    kUnknown_7D_ = 0x7D,
-    kUnknown_7E_ = 0x7E,
-    kUnknown_7F_ = 0x7F,
-    kUnknown_80_ = 0x80,
-    kUnknown_81_ = 0x81,
-    kUnknown_82_ = 0x82,
-    kUnknown_83_ = 0x83,
-    kUnknown_84_ = 0x84,
-    kUnknown_85_ = 0x85,
-    kUnknown_86_ = 0x86,
-    kUnknown_87_ = 0x87,
-    kUnknown_88_ = 0x88,
-    kUnknown_89_ = 0x89,
-    kUnknown_8A_ = 0x8A,
-    kUnknown_8B_ = 0x8B,
-    kUnknown_8C_ = 0x8C,
-    kUnknown_8D_ = 0x8D,
-    kUnknown_8E_ = 0x8E,
-    kUnknown_8F_ = 0x8F,
-    kUnknown_90_ = 0x90,
-    kUnknown_91_ = 0x91,
-    kUnknown_92_ = 0x92,
-    kUnknown_93_ = 0x93,
-    kUnknown_94_ = 0x94,
-    kUnknown_95_ = 0x95,
-    kUnknown_96_ = 0x96,
-    kUnknown_97_ = 0x97,
-    kUnknown_98_ = 0x98,
-    kUnknown_99_ = 0x99,
-    kUnknown_9A_ = 0x9A,
-    kUnknown_9B_ = 0x9B,
-    kUnknown_9C_ = 0x9C,
-    kUnknown_9D_ = 0x9D,
-    kUnknown_9E_ = 0x9E,
-    kUnknown_9F_ = 0x9F,
-    kUnknown_A0_ = 0xA0,
-    kUnknown_A1_ = 0xA1,
-    kUnknown_A2_ = 0xA2,
-    kUnknown_A3_ = 0xA3,
-    kUnknown_A4_ = 0xA4,
-    kUnknown_A5_ = 0xA5,
-    kUnknown_A6_ = 0xA6,
-    kUnknown_A7_ = 0xA7,
-    kUnknown_A8_ = 0xA8,
-    kUnknown_A9_ = 0xA9,
-};
-
-// Determines the struct to use for ValueDataObject 
-enum ValueType{
-    kUnknown_0 = 0x0,
-    kUnknown_1 = 0x1,
-    kUnknown_2 = 0x2,
-    kUnknown_3 = 0x3,
-};
-
-struct ItemThing;
-
-struct ChildItem{
-    int item_offset<bgcolor=cRed>;
-    float unknown_float;
-    int unknowns[2];
-    
-    FSeek(G_ITEM_DESC_ADDRESS + item_offset);
-    
-    ItemThing item;
-    
-    FSeek(startof(unknowns) + 8);
-};
-
-struct Unknown_Float2{
-    ValueType type<bgcolor=Teal_400>;
-    float x;
-    float y;
-};
-
-struct Vector2{
-    ValueType type<bgcolor=Teal_400>;
-    float x;
-    float y;
-};
-
-struct WhatTheFuck{
-    ValueType type<bgcolor=Teal_400>;
-    float values[8];
-};
-
-struct Vector4{
-    ValueType type<bgcolor=Teal_400>;
-    float x;
-    float y;
-    float z;
-    float w;
-};
-
-struct ValueDataObject(uint itemDescOffset){
-    ObjectType unknown_0<bgcolor=Green_400>;
-    ushort object_length<bgcolor=cBlue>;
-    local int data_length<hidden=true> = object_length - 4;
-    
-    uint offset_0;
-    short offset_1;
-    short unknown_short_0;
-    int unknown_int_0;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + offset_0);
-    
-    uint actual_data_offset<bgcolor=cRed>;
-    uint identical_offset;
-    byte unknown_group_0[5]<bgcolor=cYellow>;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + actual_data_offset);
-    uint value_count<bgcolor=Green_400>;
-    
-    local int i <hidden=true>;
-    local ValueType next_type<hidden=true>;
-    for(i = 0 ; i < value_count ; i++ )
-    {
-         next_type = ReadInt();
-         switch(next_type)
-         {
-            case kUnknown_0:
-            {
-                Unknown_Float2 value<bgcolor=Teal_700>;
-                break;
-            }
-            case kUnknown_1:
-            {
-                Vector2 value<bgcolor=Teal_700, name = Str("%.3f, %.3f", this.x, this.y)>;
-                break;
-            }
-            case kUnknown_2:
-            {
-                WhatTheFuck value<bgcolor=Teal_700>;
-                break;
-            }
-            case kUnknown_3:
-            {
-                Vector4 value<bgcolor=Teal_700, name = Str("%.3f, %.3f, %.3f, %.3f", this.x, this.y, this.z, this.w)>;
-                break;
-            }
-            default:
-                byte value[FileSize()];
-                break;
-         }
-        
-    }
-    
-    FSeek(startof(unknown_int_0) + 4);
-};
-
-typedef struct TItemDataObject(uint itemDescOffset)
+typedef struct TVarOffset(ubyte offsetSize, ubyte flagSize)
 {
-    ObjectType unknown_0<bgcolor=Green_400>;
-    ushort object_length<bgcolor=cBlue>;
-    local int data_length<hidden=true> = object_length - 4;
+    local ubyte offset_size = offsetSize;
+    local ubyte flag_size = flagSize;
     
-    uint unknown_uint_0;
-    OffsetWithFlags item_location_offset;
-    OffsetWithFlags unknown_offset_0; // AND with 0x3F
-    int unknown_int_0;
-    int unknown_int_1;
-    int offset_0;
-    int offset_1;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + itemDescOffset + item_location_offset.offset);
-    
-    local int i <hidden=true>;
-    for( i = 0 ; i < unknown_uint_0 ; i++ )
-    {
-        ChildItem child;
-    }
-    
-    
-    if(unknown_int_0 != -1)
-    {
-        FSeek(G_ITEM_DATA_ADDRESS + unknown_int_0);
-        byte indicator_0<bgcolor=cYellow>;
-    }
-    
-    if(unknown_int_1 != -1)
-    {
-        FSeek(G_ITEM_DATA_ADDRESS + unknown_int_1);
-        byte indicator_1<bgcolor=cBlue>;
-    }
-    
-    if(offset_0 != -1)
-    {
-        FSeek(G_ITEM_DATA_ADDRESS + offset_0);
-        struct{
-            int indicator_2<bgcolor=cGreen>;
-            FSeek(G_ITEM_DATA_ADDRESS + indicator_2);
-            float oh_god_damnit<bgcolor=cDkGreen>;
-            
-            FSeek(startof(indicator_2) + 4);
-        } struct_0;
-    }
-    
-    if(offset_1 != -1)
-    {
-        FSeek(G_ITEM_DATA_ADDRESS + offset_1);
-        
-        struct{
-            int indicator_3<bgcolor=cGreen>;
-            FSeek(G_ITEM_DATA_ADDRESS + indicator_3);
-            float oh_god_damnit<bgcolor=cDkGreen>;
-            
-            FSeek(startof(indicator_3) + 4);
-        } struct_1;
-        
-    }
-    
-    
-    FSeek(startof(offset_1) + 4);
-} ItemDataObject<name = EnumToString(this.unknown_0)>;
+    int offset : offset_size;
+    int flags : flag_size;
+} VarOffset<fgcolor=0x008CFF, read=Str("%Xh, %s", this.offset, IntToBinaryStr(this.flags))>;
 
-typedef struct TStruct_8B(uint itemDescOffset){
-    ObjectType unknown_0<bgcolor=Green_400>;
-    ushort object_length<bgcolor=cBlue>;
-    local int data_length<hidden=true> = object_length - 4;
-    
-    uint unknown_uint_0;
-    OffsetWithFlags unknown_1;
-    ushort unknown_ushort_2;
-    ushort unknown_ushort_3;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + unknown_uint_0);
-    float unknown_float<bgcolor=Amber_600>;
-    uint identical_offset;
-    ubyte unknown_group_0[5]<bgcolor=cDkYellow>;
-    
-    FSeek(startof(unknown_ushort_3) + 2);
-    
-} Struct_8B<name = EnumToString(this.unknown_0)>;
 
-typedef struct TStruct_8F(uint itemDescOffset){
-    ObjectType unknown_0<bgcolor=Green_400>;
-    ushort object_length<bgcolor=cBlue>;
-    local int data_length<hidden=true> = object_length - 4;
-    
-    uint unknown_offset;
-    OffsetWithFlags offset_flags;
-    
-    byte unknown_bytes[4];
-    
-    FSeek(G_ITEM_DATA_ADDRESS + unknown_offset);
-    int hasnt_exploded_yet<bgcolor=cWhite>;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + hasnt_exploded_yet);
-    struct{
-        uint value_count<bgcolor=Green_400>;
-    
-        local int i <hidden=true>;
-        local ValueType next_type<hidden=true>;
-        for(i = 0 ; i < value_count ; i++ )
-        {
-             next_type = ReadInt();
-             switch(next_type)
-             {
-                case kUnknown_0:
-                {
-                    Unknown_Float2 value<bgcolor=Teal_700>;
-                    break;
-                }
-                case kUnknown_1:
-                {
-                    Vector2 value<bgcolor=Teal_700, name = Str("%.3f, %.3f", this.x, this.y)>;
-                    break;
-                }
-                case kUnknown_2:
-                {
-                    WhatTheFuck value<bgcolor=Teal_700>;
-                    break;
-                }
-                case kUnknown_3:
-                {
-                    Vector4 value<bgcolor=Teal_700, name = Str("%.3f, %.3f, %.3f, %.3f", this.x, this.y, this.z, this.w)>;
-                    break;
-                }
-                default:
-                    byte value[FileSize()];
-                    break;
-             }
-            
-        }
-    } value_array;
-    
-    
-    FSeek(startof(unknown_0) + object_length);
-    
-} Struct_8F<name = EnumToString(this.unknown_0)>;
+typedef struct TItemEntry{
+    OffsetT offset;
+    VarOffset field_0x1(30, 2);
+    VarOffset field_0x2(30, 2);
+    int field_0x3;
+} ItemEntry;
 
-typedef struct TUnknownDataObject_2(uint itemDescOffset){
-    ObjectType unknown_0<bgcolor=Green_400>;
-    ushort object_length<bgcolor=cBlue>;
-    local int data_length<hidden=true> = object_length - 4;
-    
-    uint unknown_uint_0;
-    ushort unknown_ushort_0;
-    ushort unknown_ushort_1;
-    ushort unknown_ushort_2;
-    ushort unknown_ushort_3;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + unknown_uint_0);
-    int indicator<bgcolor=0x4C82FA>;
-    
-    FSeek(startof(unknown_0) + object_length);
-    
-} UnknownDataObject_2;
+typedef struct TStringT{
+    string data;
+} StringT<read=this.data>;
 
-typedef struct TStruct_8A(uint itemDescOffset){
-    ObjectType unknown_0<bgcolor=Green_400>;
-    ushort object_length<bgcolor=cBlue>;
-    local int data_length<hidden=true> = object_length - 4;
-    
-    int offset_0<bgcolor=Teal_700>;
-    int offset_1<bgcolor=Teal_700>;
-    int unknown_int_0;
-    int unknown_1;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + offset_0);
-    
-    struct{
-        short val_0;
-        short val_1;
-        byte b_0;
-        byte b_1;
-        byte b_2;
-        byte b_3;
-    } maybe_desc<bgcolor=cLtBlue>;
-    
-    
-    FSeek(G_ITEM_DATA_ADDRESS + offset_1);
-    
-    struct{
-        float val_0;
-        float val_1;
-        OffsetWithFlags val_2;
-    } maybe_values<bgcolor=cBlue>;
-    
-    FSeek(startof(unknown_1) + 4);
-} Struct_8A<name = EnumToString(this.unknown_0)>;
+typedef struct TVector3{
+    float x, y, z;
+} Vector3<read=Str("%.3f, %.3f, %.3f", this.x, this.y, this.z)>;
 
-typedef struct TDefaultDataObject(uint itemDescOffset){
-
-    ObjectType unknown_0<bgcolor=Green_400>;
-    ushort object_length<bgcolor=cBlue>;
-    local int data_length<hidden=true> = object_length - 4;
-    
-    if(data_length < 0)
-    {
-        byte data[0];
-    }
-    else{
-        byte data[data_length];
-    }
-} DefaultDataObject<name = EnumToString(this.unknown_0)>;
-
-int ResolveObject(uint itemDescOffset){
-    local ObjectType object_type = ReadShort();
-   
-    // TODO: do some binary search tree shit instead because this is 170 cases
-    // I am so sorry
-    if(object_type < 0x55)
-    {
-        switch(object_type)
-        {
-            case 0x00: DefaultDataObject object(itemDescOffset); break;
-            case 0x01: DefaultDataObject object(itemDescOffset); break;
-            case 0x02: DefaultDataObject object(itemDescOffset); break;
-            case 0x03: DefaultDataObject object(itemDescOffset); break;
-            case 0x04: DefaultDataObject object(itemDescOffset); break;
-            case 0x05: DefaultDataObject object(itemDescOffset); break;
-            case 0x06: DefaultDataObject object(itemDescOffset); break;
-            case 0x07: DefaultDataObject object(itemDescOffset); break;
-            case 0x08: DefaultDataObject object(itemDescOffset); break;
-            case 0x09: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x0A: DefaultDataObject object(itemDescOffset); break;
-            case 0x0B: DefaultDataObject object(itemDescOffset); break;
-            case 0x0C: DefaultDataObject object(itemDescOffset); break;
-            case 0x0D: DefaultDataObject object(itemDescOffset); break;
-            case 0x0E: DefaultDataObject object(itemDescOffset); break;
-            case 0x0F: DefaultDataObject object(itemDescOffset); break;
-            case 0x10: DefaultDataObject object(itemDescOffset); break;
-            case 0x11: DefaultDataObject object(itemDescOffset); break;
-            case 0x12: DefaultDataObject object(itemDescOffset); break;
-            case 0x13: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x14: DefaultDataObject object(itemDescOffset); break;
-            case 0x15: DefaultDataObject object(itemDescOffset); break;
-            case 0x16: DefaultDataObject object(itemDescOffset); break;
-            case 0x17: DefaultDataObject object(itemDescOffset); break;
-            case 0x18: DefaultDataObject object(itemDescOffset); break;
-            case 0x19: DefaultDataObject object(itemDescOffset); break;
-            case 0x1A: DefaultDataObject object(itemDescOffset); break;
-            case 0x1B: DefaultDataObject object(itemDescOffset); break;
-            case 0x1C: DefaultDataObject object(itemDescOffset); break;
-            case 0x1D: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x1E: DefaultDataObject object(itemDescOffset); break;
-            case 0x1F: DefaultDataObject object(itemDescOffset); break;
-            case 0x20: DefaultDataObject object(itemDescOffset); break;
-            case 0x21: DefaultDataObject object(itemDescOffset); break;
-            case 0x22: DefaultDataObject object(itemDescOffset); break;
-            case 0x23: DefaultDataObject object(itemDescOffset); break;
-            case 0x24: DefaultDataObject object(itemDescOffset); break;
-            case 0x25: DefaultDataObject object(itemDescOffset); break;
-            case 0x26: DefaultDataObject object(itemDescOffset); break;
-            case 0x27: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x28: DefaultDataObject object(itemDescOffset); break;
-            case 0x29: DefaultDataObject object(itemDescOffset); break;
-            case 0x2A: DefaultDataObject object(itemDescOffset); break;
-            case 0x2B: ItemDataObject    object(itemDescOffset); break;
-            case 0x2C: DefaultDataObject object(itemDescOffset); break;
-            case 0x2D: DefaultDataObject object(itemDescOffset); break;
-            case 0x2E: DefaultDataObject object(itemDescOffset); break;
-            case 0x2F: DefaultDataObject object(itemDescOffset); break;
-            case 0x30: DefaultDataObject object(itemDescOffset); break;
-            case 0x31: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x32: DefaultDataObject object(itemDescOffset); break;
-            case 0x33: DefaultDataObject object(itemDescOffset); break;
-            case 0x34: DefaultDataObject object(itemDescOffset); break;
-            case 0x35: DefaultDataObject object(itemDescOffset); break;
-            case 0x36: DefaultDataObject object(itemDescOffset); break;
-            case 0x37: DefaultDataObject object(itemDescOffset); break;
-            case 0x38: DefaultDataObject object(itemDescOffset); break;
-            case 0x39: DefaultDataObject object(itemDescOffset); break;
-            case 0x3A: DefaultDataObject object(itemDescOffset); break;
-            case 0x3B: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x3C: DefaultDataObject object(itemDescOffset); break;
-            case 0x3D: DefaultDataObject object(itemDescOffset); break;
-            case 0x3E: DefaultDataObject object(itemDescOffset); break;
-            case 0x3F: DefaultDataObject object(itemDescOffset); break;
-            case 0x40: DefaultDataObject object(itemDescOffset); break;
-            case 0x41: DefaultDataObject object(itemDescOffset); break;
-            case 0x42: DefaultDataObject object(itemDescOffset); break;
-            case 0x43: DefaultDataObject object(itemDescOffset); break;
-            case 0x44: DefaultDataObject object(itemDescOffset); break;
-            case 0x45: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x46: DefaultDataObject object(itemDescOffset); break;
-            case 0x47: DefaultDataObject object(itemDescOffset); break;
-            case 0x48: DefaultDataObject object(itemDescOffset); break;
-            case 0x49: DefaultDataObject object(itemDescOffset); break;
-            case 0x4A: DefaultDataObject object(itemDescOffset); break;
-            case 0x4B: DefaultDataObject object(itemDescOffset); break;
-            case 0x4C: DefaultDataObject object(itemDescOffset); break;
-            case 0x4D: DefaultDataObject object(itemDescOffset); break;
-            case 0x4E: DefaultDataObject object(itemDescOffset); break;
-            case 0x4F: DefaultDataObject object(itemDescOffset); break;
-            
-            case 0x50: DefaultDataObject object(itemDescOffset); break;
-            case 0x51: DefaultDataObject object(itemDescOffset); break;
-            case 0x52: DefaultDataObject object(itemDescOffset); break;
-            case 0x53: DefaultDataObject object(itemDescOffset); break;
-            case 0x54: DefaultDataObject object(itemDescOffset); break;
-	        
-	        default: break;
-        }
-    }
-    else if(object_type > 0x55)
-    {
-        switch(object_type)
-        {
-	        case 0x56: DefaultDataObject object(itemDescOffset); break;
-	        case 0x57: DefaultDataObject object(itemDescOffset); break;
-	        case 0x58: DefaultDataObject object(itemDescOffset); break;
-	        case 0x59: DefaultDataObject object(itemDescOffset); break;
-	        case 0x5A: DefaultDataObject object(itemDescOffset); break;
-	        case 0x5B: DefaultDataObject object(itemDescOffset); break;
-	        case 0x5C: DefaultDataObject object(itemDescOffset); break;
-	        case 0x5D: DefaultDataObject object(itemDescOffset); break;
-	        case 0x5E: DefaultDataObject object(itemDescOffset); break;
-	        case 0x5F: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0x60: DefaultDataObject object(itemDescOffset); break;
-	        case 0x61: DefaultDataObject object(itemDescOffset); break;
-	        case 0x62: DefaultDataObject object(itemDescOffset); break;
-	        case 0x63: DefaultDataObject object(itemDescOffset); break;
-	        case 0x64: DefaultDataObject object(itemDescOffset); break;
-	        case 0x65: DefaultDataObject object(itemDescOffset); break;
-	        case 0x66: DefaultDataObject object(itemDescOffset); break;
-	        case 0x67: DefaultDataObject object(itemDescOffset); break;
-	        case 0x68: DefaultDataObject object(itemDescOffset); break;
-	        case 0x69: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0x6A: DefaultDataObject object(itemDescOffset); break;
-	        case 0x6B: DefaultDataObject object(itemDescOffset); break;
-	        case 0x6C: DefaultDataObject object(itemDescOffset); break;
-	        case 0x6D: DefaultDataObject object(itemDescOffset); break;
-	        case 0x6E: DefaultDataObject object(itemDescOffset); break;
-	        case 0x6F: DefaultDataObject object(itemDescOffset); break;
-	        case 0x70: DefaultDataObject object(itemDescOffset); break;
-	        case 0x71: DefaultDataObject object(itemDescOffset); break;
-	        case 0x72: DefaultDataObject object(itemDescOffset); break;
-	        case 0x73: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0x74: DefaultDataObject object(itemDescOffset); break;
-	        case 0x75: DefaultDataObject object(itemDescOffset); break;
-	        case 0x76: DefaultDataObject object(itemDescOffset); break;
-	        case 0x77: DefaultDataObject object(itemDescOffset); break;
-	        case 0x78: DefaultDataObject object(itemDescOffset); break;
-	        case 0x79: DefaultDataObject object(itemDescOffset); break;
-	        case 0x7A: DefaultDataObject object(itemDescOffset); break;
-	        case 0x7B: DefaultDataObject object(itemDescOffset); break;
-	        case 0x7C: DefaultDataObject object(itemDescOffset); break;
-	        case 0x7D: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0x7E: DefaultDataObject object(itemDescOffset); break;
-	        case 0x7F: DefaultDataObject object(itemDescOffset); break;
-	        case 0x80: DefaultDataObject object(itemDescOffset); break;
-	        case 0x81: DefaultDataObject object(itemDescOffset); break;
-	        case 0x82: DefaultDataObject object(itemDescOffset); break;
-	        case 0x83: DefaultDataObject object(itemDescOffset); break;
-	        case 0x84: DefaultDataObject object(itemDescOffset); break;
-	        case 0x85: DefaultDataObject object(itemDescOffset); break;
-	        case 0x86: DefaultDataObject object(itemDescOffset); break;
-	        case 0x87: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0x88: DefaultDataObject object(itemDescOffset); break;
-	        case 0x89: DefaultDataObject object(itemDescOffset); break;
-	        case 0x8A: Struct_8A         object(itemDescOffset); break;
-	        case 0x8B: Struct_8B         object(itemDescOffset); break;
-	        case 0x8C: DefaultDataObject object(itemDescOffset); break;
-	        case 0x8D: DefaultDataObject object(itemDescOffset); break;
-	        case 0x8E: DefaultDataObject object(itemDescOffset); break;
-	        case 0x8F: Struct_8F         object(itemDescOffset); break;
-	        case 0x90: DefaultDataObject object(itemDescOffset); break;
-	        case 0x91: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0x92: DefaultDataObject object(itemDescOffset); break;
-	        case 0x93: DefaultDataObject object(itemDescOffset); break;
-	        case 0x94: DefaultDataObject object(itemDescOffset); break;
-	        case 0x95: DefaultDataObject object(itemDescOffset); break;
-	        case 0x96: DefaultDataObject object(itemDescOffset); break;
-	        case 0x97: DefaultDataObject object(itemDescOffset); break;
-	        case 0x98: DefaultDataObject object(itemDescOffset); break;
-	        case 0x99: DefaultDataObject object(itemDescOffset); break;
-	        case 0x9A: DefaultDataObject object(itemDescOffset); break;
-	        case 0x9B: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0x9C: DefaultDataObject object(itemDescOffset); break;
-	        case 0x9D: DefaultDataObject object(itemDescOffset); break;
-	        case 0x9E: DefaultDataObject object(itemDescOffset); break;
-	        case 0x9F: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA0: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA1: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA2: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA3: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA4: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA5: DefaultDataObject object(itemDescOffset); break;
-	        
-	        case 0xA6: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA7: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA8: DefaultDataObject object(itemDescOffset); break;
-	        case 0xA9: DefaultDataObject object(itemDescOffset); break;
-	        
-	        default: break;
-        }
-    }
-    else{
-        DefaultDataObject object(itemDescOffset);
-    }
-    
-    
-    return sizeof(object);
-};
-
-struct UnsureThing{
-    byte unknown_0<bgcolor=Green_400>;
-    byte unknown_1<bgcolor=Green_400>;
-    byte unknown_2<bgcolor=Green_400>;
-    byte unknown_3<bgcolor=Green_400>;
-};
-
-struct ObjectDesc{
-    uint semi_known_count<bgcolor=Red_400>;
-    OffsetWithFlags weird_thing_0;
-    OffsetWithFlags weird_thing_1;
-    OffsetWithFlags weird_thing_2;
-    
-    if(semi_known_count > 0)
-    {
-
-        
-        FSeek(G_ITEM_DATA_ADDRESS + weird_thing_1.offset);
-        
-        byte test_byte<bgcolor=cLtBlue>;
-        
-        FSeek(startof(weird_thing_2) + 4);
-    }
-        
-};
-
-struct ItemThing{
-    ITEM_COUNT += 1;
-    uint unknown_uint_0<bgcolor=Teal_400>; // GAME CHECKS +0x78, 0x44, 0x5C
-    uint unknown_uint_1<bgcolor=Teal_400>;
-    FSeek(G_ITEM_DATA_ADDRESS + unknown_uint_0);
-    
-    struct{
-        float values[24];
-    } temp_0<bgcolor=cPurple>;
-    
-    FSeek(startof(unknown_uint_1) + 4);
-    ushort unknown_ushort_0<bgcolor=Teal_400>;
-    ubyte unknown_ubyte_0<bgcolor=Teal_400>;
-    ubyte unknown_ubyte_1<bgcolor=Teal_400>;
-    float unknown_float_0<bgcolor=Amber_400>;
-    float unknown_float_1<bgcolor=Amber_400>;
-    float unknown_float_2<bgcolor=Amber_400>;
-    
-    uint unknown_uint_3<bgcolor=Teal_400>;
-    OffsetWithFlags weird_thing_0;
-    OffsetWithFlags weird_thing_1; // Gets ANDed with 0x3FFFFFFF, remaining bits * 2
-    
-    uint unknown_uint_4<bgcolor=Teal_400>;
-    uint unknown_uint_5<bgcolor=Teal_400>;
-    
-    FSeek(G_ITEM_DATA_ADDRESS + unknown_uint_4);
-    
-    struct
-    {
-        int unknown_0;
-        float unknown_1;
-        float unknown_2;
-    } temp4[unknown_uint_5]<bgcolor=0x690000>;
-    
-    FSeek(startof(unknown_uint_5) + 4);
-    
-    int unknown_int_0<bgcolor=Sky_400>;
-    int unknown_int_1<bgcolor=Sky_400>;
-    int unknown_int_2<bgcolor=Sky_400>;
-    
-    ObjectDesc object_desc_maybe;
-    
-    struct
-    {
-        int unknown_int_3<bgcolor=Sky_400>;
-        int unknown_int_3<bgcolor=Sky_400>;
-        int unknown_int_3<bgcolor=Sky_400>;
-        int unknown_int_3<bgcolor=Sky_400>;
-        int unknown_int_3<bgcolor=Sky_400>;
-        int unknown_int_3<bgcolor=Sky_400>;
-        int unknown_int_3<bgcolor=Sky_400>;
-        
-        uint unknown_uint_6<bgcolor=Teal_400>;
-        
-        int unknown_int_3<bgcolor=Sky_400>;
-        
-        uint unknown_uint_7<bgcolor=Teal_400>;
-        uint hash<bgcolor=Teal_400>;
-        
-        int unknown_int_3<bgcolor=Sky_400>;
-        int unknown_int_3<bgcolor=Sky_400>;
-    } unknown_section;
-    
-    local uint current_size = unknown_ubyte_1;
-    FSeek(FTell() + unknown_ubyte_1);
-    while(current_size < unknown_ushort_0)
-    {
-        //DataObject data_object(unknown_uint_0)<optimize=false,bgcolor=cGray>;
-        current_size += ResolveObject(unknown_uint_0);
-    }
-};
-
-typedef struct TWeirdStructure{
-    byte unknown_0[6];
-    byte count;
-    byte unknown_1;
-    int offset<bgcolor=Amber_700>;
-} WeirdStructure<bgcolor=cGray>;
-
-typedef struct TDataSection{
-    uint address<bgcolor=Green_400>;
-    uint item_data_offset<bgcolor=Green_700>;
-    uint item_desc_offset<bgcolor=Green_700>;
-    int unknown_offset_0;
-    int unknown_offset_1;
-    int unknown_offset_2;
-    int unknown_offset_3;
-    int unknown_offset_4;
-    int unknown_offset_5;
-    int unknown_offset_6;
-    int unknown_offset_7;
-    int unknown_offset_8;
-    int unknown_offset_9;
-    int unknown_offset_A;
-    int unknown_offset_B;
-    
-    G_ITEM_DATA_ADDRESS = address + item_data_offset;
-    G_ITEM_DESC_ADDRESS = address + item_desc_offset;
-} DataSection <bgcolor=cGray>;
-
-struct UnknownStruct_0{
-    uint address;
-    uint count;
-};
-
-typedef struct TGenericString{
-    string value;
-} GenericString<bgcolor=Amber_700, name = (exists(this.value) ? this.value : "NULL")>;
-
-typedef struct TStringContainer(uint stringCount){
-    uint address<bgcolor=Amber_400>;
-    
-    FSeek(address);
-    
-    local int i<hidden=true>;
-    for(i = 0 ; i < stringCount ; i++ )
-    {
-        GenericString entry;
-    }
-    
-    FSeek(startof(address) + 4);
-}StringContainer;
-
-typedef struct TShaderContainer{
-    uint address;
-    uint data_size;
-    
-    FSeek(address);
-    byte container_data[data_size];
-    FSeek(startof(data_size) + 4);
-} ShaderContainer<bgcolor=cBlack>;
-
-typedef struct TRootItem{
-    uint root_item_offset<bgcolor=Red_400>;
-    int unknown_int_0;
-    int unknown_int_1;
-    uint unknown_uint_0;
-} RootItem<bgcolor=cGray>;
-
-struct RootDirectory{
-    RootItem root_items[15];
-    short unknown_short_0<bgcolor=cGray>;
-    byte unknown_byte_0<bgcolor=cGray>;
-    byte unknown_byte_1<bgcolor=cGray>;
-    int unknown_int_group_0[5]<bgcolor=cGray>;
-    short unknown_short_group[4]<bgcolor=cGray>;
-    
-    float unknown_float_group_0[4]<bgcolor=cGray>;
-    
-    int unknown_int_group_1[4]<bgcolor=cGray>;
-    float unknown_float_group_1[10]<bgcolor=cGray>;
-    
-    short unknown_short_group_0[24]<bgcolor=cGray>;
-};
-
-enum<byte> ConstantType{
-    kUnknownConst_0 = 0x0,
-    kUnknownConst_1,
-    kUnknownConst_2,
-    kUnknownConst_3,
-    kUnknownConst_4,
-    kUnknownConst_5,
-    kUnknownConst_6,
-    kUnknownConst_7,
-    kUnknownConst_8,
-    kUnknownConst_9,
-    kUnknownConst_A,
-    kUnknownConst_B,
-    kUnknownConst_C,
-    kUnknownConst_D,
-};
-
-typedef struct TConstantDesc
-{
-    ConstantType type;
-    ubyte name_length;
-    ubyte name_offset;
-    ubyte unknown_byte;
-    
-    int unknown_ints[2];
-    int data_offset<bgcolor=Amber_700>;
-    
-} ConstantDesc<bgcolor=cGray>;
+typedef struct TVector4{
+    float x, y, z, w;
+} Vector4<read=Str("%.3f, %.3f, %.3f, %.3f", this.x, this.y, this.z, this.w)>;
 
 struct Header{
-    char magic[4]<bgcolor=Amber_400>;
-    short unknown_0<bgcolor=cGray>;
-    short unknown_1<bgcolor=cGray>;
+    char magic[4]<fgcolor=cYellow>;
     
-    uint item_data_size<bgcolor=Sky_400>;
-    uint item_desc_data_size<bgcolor=Sky_400>;
-    uint items_total_size_maybe<bgcolor=Sky_400>;
+    byte field_0x1;
+    byte field_0x2;
+    byte field_0x3;
+    Padding padding(1);
     
-    uint unknown_int_0<bgcolor=cGray>;
-    uint end_string_count<bgcolor=Sky_700>;
+    int property_data_size; // property data size?
+    int item_data_size; // item data size
+    int total_data_size; // item + property data size
+    int field_0x7;
+    int vertex_set_count<fgcolor=cGreen>; // selected vertex set count
     
-    byte texture_count<bgcolor=Green_400>;
-    byte constant_count<bgcolor=Green_400>;
-    byte unknown_byte_1<bgcolor=cGray>;
-    byte weird_struct_count<bgcolor=Green_400>;
+    byte texture_count<fgcolor=cGreen>; // texture count
+    byte field_0xA<fgcolor=cGreen>; // constant count
+    byte field_0xB;
+    byte field_0xC<fgcolor=cGreen>; // struct_0x2 count
     
-    byte string_count<bgcolor=Green_400>;
-    byte unknown_byte_3<bgcolor=cGray>;
-    byte unknown_byte_4<bgcolor=cGray>;
-    byte unknown_byte_5<bgcolor=cGray>;
+    byte string_count<fgcolor=cGreen>; // string count
+    byte field_0xE;
+    byte field_0xF;
+    byte field_0x10;
     
-    byte unknown_byte_group[12]<bgcolor=cGray>;
+    byte field_0x11;
+    byte field_0x12;
+    byte field_0x13;
+    byte field_0x14;
+    
+    byte field_0x15;
+    byte field_0x16;
+    byte field_0x17;
+    byte field_0x18;
+    
+    Padding padding_1(4);
 };
 
-typedef struct TProjectInfo{
-    int unknown_ints_0[2];
-    int item_count<bgcolor=Green_400>;
-    int unknown_ints_1[15];
-} ProjectInfo<bgcolor=cGray>;
+Header header<bgcolor=cDkGreen>;
+ItemEntry root_items[15];
+byte unknown_data[0x98]<bgcolor=cGray>;
 
-struct VfxBinary{
-    Header header;
-    RootDirectory root_directory;
-    ShaderContainer shader_container;
-    StringContainer string_container(header.string_count);
+struct{
+    AddressT address;
+    uint size;
+} shader_blob_ptr<read=Str("%Xh, %d bytes", this.address, this.size)>;
+
+struct{
+    AddressT address;
+    int field_0x1;
+    int field_0x2;
+} string_blob_ptr<read=Str("%Xh", this.address)>;
+
+struct{
+    AddressT address;
+    int field_0x1;
+} blob_0x2_ptr<read=Str("%Xh", this.address)>;
+
+struct{
+    AddressT address;
+    OffsetT properties_offset; // USED
+    OffsetT items_offset; // USED
+    OffsetT field_0x3; // USED
+    OffsetT field_0x4;
+    OffsetT field_0x5; // USED
+    OffsetT field_0x6;
+    OffsetT field_0x7;
+    OffsetT field_0x8; // USED
+    OffsetT field_0x9; // USED
+    OffsetT field_0xA; // USED
+    OffsetT field_0xB;
+    OffsetT field_0xC; // USED
+    OffsetT field_0xD;
+    OffsetT field_0xE; // USED
     
-    int unknown_int_group_0[2]<bgcolor=cGray>;
-    
-    UnknownStruct_0 unknown_struct_0<bgcolor=cGray>;
-    DataSection data_section;
+    local AddressT properties_address = address + properties_offset;
+    local AddressT items_address = address + items_offset;
+    local AddressT constants_address = address + field_0x3;
+    local AddressT constant_data_address = address + field_0x5;
+    local AddressT vertex_set_address = address + field_0x8;
+    local AddressT texture_indices_address = address + field_0x9;
+    local AddressT project_info_address = address + field_0xA;
+    local AddressT texture_groups_address = address + field_0xE;
+} item_blob_ptr<open=true>;
+
+FSeek(shader_blob_ptr.address);
+ubyte shader_blob[shader_blob_ptr.size]<bgcolor=cBlack, fgcolor=cGray>;
+
+FSeek(string_blob_ptr.address);
+StringT strings[header.string_count]<fgcolor=cYellow, optimize=false>;
+
+FSeek(blob_0x2_ptr.address);
+struct{
+    local int count = header.field_0xC;
+    struct{
+        byte field_0x0;
+        byte field_0x1;
+        byte field_0x2;
+        byte field_0x3;
+        byte field_0x4;
+        byte field_0x5;
+        byte field_0x6;
+        byte field_0x7;
+        OffsetT offset;
+    } entries[count];
+    local int i;
+    for(i = 0; i < count; i++){
+        FSeek(startof(this) + entries[i].offset);
+        int sanity_check;
+    }
+} struct_0x2<bgcolor=cLtBlue, read=Str("count: %d", this.count)>;
+
+FSeek(item_blob_ptr.vertex_set_address);
+struct{
+    local int count = header.vertex_set_count;
+    short name_offsets[count]<fgcolor=cRed>;
     
     local int i<hidden=true>;
-    for( i = 0 ; i < 15 ; i++ )
+    for(i = 0; i < count; i++)
     {
-        if(root_directory.root_items[i].root_item_offset != 1)
+        FSeek(startof(this) + sizeof(name_offsets) + name_offsets[i]);
+        StringT set<fgcolor=cYellow>;
+    }
+} vertex_sets<read=Str("count: %d", this.count), bgcolor=0xC9A91C>;
+
+FSeek(item_blob_ptr.project_info_address);
+struct{
+    int field_0x0;
+    int field_0x1;
+    int item_count<fgcolor=cGreen>;
+    Padding padding(32);
+    int field_0x3;
+    int field_0x4;
+    Padding padding_1(20);
+    
+} project_info<bgcolor=cDkGreen>;
+
+FSeek(item_blob_ptr.texture_indices_address);
+int64 texture_string_indices[header.texture_count]<bgcolor=cRed>;
+
+
+enum<byte> ConstantDataType{
+
+    kVector4 = 0x1,
+    kFloat32 = 0x3,
+};
+
+typedef struct TConstantEntry{
+    ConstantDataType type;
+    byte name_length;
+    byte name_offset<fgcolor=cRed>;
+    byte field_0x3;
+    OffsetT field_0x4;
+    OffsetT field_0x5;
+    OffsetT field_0x6;
+    
+    FSeek(strings_address + name_offset);
+    string name<fgcolor=cYellow>;
+    
+    FSeek(item_blob_ptr.constant_data_address + field_0x6);
+    switch(type)
+    {
+        case kFloat32: float value; break;
+        case kVector4: Vector4 value; break;
+        default: int temp; break;
+    }
+    
+    FSeek(startof(this) + 0x10);
+} ConstantEntry<read=Str("%s %s", EnumToString(this.type), this.name)>;
+
+FSeek(item_blob_ptr.constants_address);
+if(header.field_0xA)
+    struct{
+        local int count = header.field_0xA;
+        local AddressT byte_field_address = FTell() + (count * 0x10);
+        local AddressT strings_address = byte_field_address + 0x10;
+        local int i<hidden=true>;
+        for(i = 0; i < count; i++)
         {
-            FSeek(G_ITEM_DESC_ADDRESS + root_directory.root_items[i].root_item_offset);
-            ItemThing root_item;
+            ConstantEntry entry;
         }
         
-    }
-    
-    FSeek(unknown_struct_0.address);
-    WeirdStructure weird_struct[header.weird_struct_count];
-    
-    FSeek(data_section.address);
-    int64 texture_index_maybe[header.texture_count]<bgcolor=cYellow>;
-    
-    FSeek(data_section.address +  data_section.unknown_offset_0);
-    ConstantDesc constant_descs[header.constant_count];
-    
-    FSeek(data_section.address +  data_section.unknown_offset_1);
-    int test_1<bgcolor=cPurple>;
-    
-    FSeek(data_section.address +  data_section.unknown_offset_2);
-    int test_2<bgcolor=cPurple>;
-    
-    FSeek(data_section.address +  data_section.unknown_offset_3);
-    int test_3<bgcolor=cPurple>;
-    
-    FSeek(data_section.address +  data_section.unknown_offset_4);
-    int test_4<bgcolor=cPurple>;
-    
-    FSeek(data_section.address +  data_section.unknown_offset_5);
-    short string_offsets[header.end_string_count]<bgcolor=cPurple>;
-    
-    local int64 start_point<hidden=true> = FTell();
-    for( i = 0 ; i < header.end_string_count ; i++ )
+        byte byte_field[16];
+    }constants<read=Str("count: %d", this.count), bgcolor=cBlue>;
+
+struct Item;
+typedef struct TTextureGroup{
+    byte indices[8];
+    local int count = 0;
+    local int i<hidden=true>;
+    local int64 string_index<hidden=true> = -1;
+    for(i = 0; i < 8; i++)
     {
-        FSeek(start_point + string_offsets[i]);
-        GenericString string_val;
+        if(indices[i] == -1)
+            continue;
+            
+        count += 1;
+        string_index = texture_string_indices[indices[i]];
+        local StringT texture;
+        if(string_index > 255)
+            continue;
+        texture.data = strings[string_index].data;
+        
+    }
+} TextureGroup;
+
+enum KeyType{
+    k0 = 0x0,
+    k1 = 0x1,
+    k2 = 0x2,
+    kVector3 = 0x3
+};
+
+typedef struct TKey2{
+    Vector4 v1;
+    Vector3 v2;
+} Key2;
+
+typedef struct TKey{
+    KeyType type<bgcolor=0xFF0063>;
+    float time;
+    switch(type)
+    {
+        case k0: float value; break;
+        case k1: float value; break;
+        case k2: Key2 value; break;
+        case kVector3: Vector3 value; break;
+        default: break;
+    }
+} Key<read=Str("%s", EnumToString(this.type))>;
+
+typedef struct TKeyList{
+    int count<fgcolor=cGreen>;
+    local int i<hidden=true>;
+    for(i = 0; i < count; i++)
+    {
+        Key key;
+    }
+} KeyList<read=Str("keys: %d", this.count)>;
+
+enum <short> PropertyType{
+    k1E = 0x1E,
+    kItem = 0x2B,
+    k31 = 0x31,
+    k8A = 0x8A,
+    k8B = 0x8B,
+    k8C = 0x8C,
+    k8E = 0x8E,
+    k8F = 0x8F,
+    k91 = 0x91,
+    kA5 = 0xA5,
+};
+
+void GenerateProperty_0xA5(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    OffsetT field_0x2;
+    Offset24 field_0x3;
+    int field_0x4;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x2);
+    Offset24 field_0x5<bgcolor=cYellow>;
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x91(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    OffsetT field_0x2;
+    VarOffset field_0x3(30, 2);
+    int field_0x4;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x2);
+    OffsetT field_0x5<bgcolor=cYellow>;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x5);
+    KeyList keys<bgcolor=cDkBlue>;
+    
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x8C(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    OffsetT field_0x2;
+    Offset24 field_0x3;
+    int field_0x4;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x2);
+    Offset24 field_0x5<bgcolor=cYellow>;
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x8B(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    OffsetT field_0x2;
+    VarOffset field_0x3(30, 2);
+    int field_0x4;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x2);
+    float field_0x5<bgcolor=cYellow>;
+    
+    FSeek(parentof(this).address_0x0 + field_0x3.offset);
+    float field_0x6<bgcolor=cDkYellow>;
+    
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x8A(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    OffsetT field_0x2;
+    OffsetT field_0x3;
+    int field_0x4;
+    int field_0x5;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x2);
+    float field_0x6<bgcolor=cYellow>;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x3);
+    float field_0x7<bgcolor=cYellow>;
+    
+    
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x8E(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    OffsetT field_0x2;
+    Offset24 field_0x3;
+    int field_0x4;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x2);
+    Offset24 field_0x5;
+    
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x8F(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    OffsetT field_0x2;
+    Offset24 field_0x3;
+    int field_0x4;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x2);
+    OffsetT field_0x5;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x5);
+    KeyList keys<bgcolor=cDkBlue>;
+    
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x31()
+{
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    int field_0x2, field_0x3, field_0x4, field_0x5;
+    int field_0x6, field_0x7, field_0x8, field_0x9;
+    short field_0xA;
+    short offset;
+    int field_0xC;
+    int field_0xD;
+    int field_0xE;
+    int field_0xF;
+    int field_0x10;
+    int field_0x11;
+    int field_0x12;
+    int field_0x13;
+    int field_0x14;
+    int field_0x15;
+    int field_0x16;
+    int field_0x17;
+    int field_0x18;
+    int field_0x19;
+    int field_0x1A;
+    
+    FSeek(item_blob_ptr.texture_groups_address + offset);
+    TextureGroup texture_group<bgcolor=cDkRed>;
+    
+    FSeek(startof(this) + size);
+}
+
+void GenerateItemProperty(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    int count<fgcolor=cGreen>;
+    VarOffset field_0x3(30, 2);
+    short field_0x4 : 6;
+    short field_0x4a : 10;
+    short field_0x5;
+    Offset24 field_0x6, field_0x7;
+    OffsetT field_0x8, field_0x9;
+    
+    FSeek(parentof(this).address_0x0 + field_0x3.offset);
+    struct{
+        OffsetT offset;
+        float field_0x1;
+        Offset24 field_0x2;
+        Offset24 field_0x3;
+    } item_info[count]<bgcolor=0x92006D>;
+    
+    local int i<hidden=true>;
+    for(i = 0; i < count; i++)
+    {
+        FSeek(item_blob_ptr.items_address + item_info[i].offset);
+        Item item<bgcolor=0x92006D>;
+    }
+     
+    if(field_0x8 > -1)
+    {
+        FSeek(item_blob_ptr.properties_address + field_0x8);
+        OffsetT field_0xA<bgcolor=0x92006D>;
+        FSeek(item_blob_ptr.properties_address + field_0xA);
+        float field_0xB<bgcolor=0x92006D>;
     }
     
-    FSeek(data_section.address +  data_section.unknown_offset_6);
-    int test_6<bgcolor=cPurple>;
+    if(field_0x9 > -1)
+    {
+        FSeek(item_blob_ptr.properties_address + field_0x9);
+        OffsetT field_0xC<bgcolor=0x92006D>;
+        FSeek(item_blob_ptr.properties_address + field_0xC);
+        float field_0xD<bgcolor=0x92006D>;
+    }
     
-    FSeek(data_section.address +  data_section.unknown_offset_7);
-    ProjectInfo project_info;
     
-    FSeek(data_section.address +  data_section.unknown_offset_8);
-    //int test_8<bgcolor=cPurple>;
-} vfx_binary;
+    FSeek(startof(this) + size);
+}
+
+void GenerateProperty_0x1E(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    VarOffset field_0x2(30, 2);
+    int field_0x3;
+    float field_0x4;
+    
+    FSeek(parentof(this).address_0x0 + field_0x2.offset);
+    float field_0x5<bgcolor=cWhite>;
+    FSeek(startof(this) + size);
+}
+
+void GeneratePropertyGeneric(){
+    PropertyType type<bgcolor=cGreen>;
+    short size<bgcolor=cBlue>;
+    byte data[size - 4];
+}
+
+typedef struct TItemProperty{
+    switch(ReadShort())
+    {
+        case k1E: GenerateProperty_0x1E(); break;
+        case kItem: GenerateItemProperty(); break;
+        case k31: GenerateProperty_0x31(); break;
+        case k8A: GenerateProperty_0x8A(); break;
+        case k8B: GenerateProperty_0x8B(); break;
+        case k8C: GenerateProperty_0x8C(); break;
+        case k8E: GenerateProperty_0x8E(); break;
+        case k8F: GenerateProperty_0x8F(); break;
+        case k91: GenerateProperty_0x91(); break;
+        case kA5: GenerateProperty_0xA5(); break;
+        default: GeneratePropertyGeneric(); break;  
+    }
+} ItemProperty<read=Str("%s (%Xh)", EnumToString(this.type), this.type)>;
+
+typedef struct TItem{
+    OffsetT field_0x0;
+    OffsetT field_0x1;
+    int property_size : 24;
+    int property_offset : 8;
+    float field_0x4;
+    float field_0x5;
+    float field_0x6;
+    OffsetT field_0x7;
+    Offset24 field_0x8;
+    Offset24 field_0x9;
+    OffsetT field_0xA;
+    int field_0xB;
+    int field_0xC;
+    int field_0xD;
+    int field_0xE;
+    
+    int child_count<fgcolor=cGreen>;
+    Offset24 field_0x10;
+    OffsetT field_0x11;
+    Offset24 field_0x12;
+    int field_0x13;
+    
+    Offset24 field_0x15;
+    int field_0x16, field_0x17, field_0x18;
+    
+    int field_0x19, field_0x1A, field_0x1B, field_0x1C;
+    
+    int field_0x1D;
+    uint hash;
+    int field_0x1F;
+    int field_0x20;
+    
+    local int64 address_0x0 = item_blob_ptr.properties_address + field_0x0;
+    FSeek(address_0x0);
+    float test<bgcolor=cRed>;
+    
+    FSeek(item_blob_ptr.properties_address + field_0x1);
+    float test_0x1;
+    
+    if(field_0x11 > -1)
+    {
+        FSeek(item_blob_ptr.properties_address + field_0x11);
+        float sanity<bgcolor=cGreen>;
+    }
+    
+    FSeek(startof(this) + 0x7C);
+    
+    local int64 end_point = FTell() + property_size;
+    FSkip(property_offset);
+    while(FTell() < end_point)
+    {
+        ItemProperty property<bgcolor=cNone>;
+    }
+}Item<read=Str("children: %d", this.child_count)>;
+
+local int i<hidden=true>;
+for(i = 0; i < 15; i++)
+{
+    if(root_items[i].offset == 1)
+        continue;
+    
+    FSeek(item_blob_ptr.items_address + root_items[i].offset);
+    Item item<bgcolor=0xFF00BF>;
+}
